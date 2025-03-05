@@ -1,0 +1,51 @@
+import yfinance as yf
+import sqlite3
+
+def fetch_beta_values():
+    stocks = []
+    
+    # Get all tickers from Yahoo Finance for the S&P 500
+    sp500 = yf.Ticker("^GSPC")
+    tickers = list(yf.download("SPY", period="1d").index)  # SPY is an ETF tracking S&P 500
+    
+    for ticker in tickers:
+        try:
+            stock = yf.Ticker(ticker)
+            stock_price = stock.history(period='1d')['Close'].values[-1] if not stock.history(period='1d').empty else None
+            beta = stock.info.get("beta", None)
+            
+            if beta is not None and stock_price is not None:
+                risk_category = classify_risk(beta)
+                stocks.append((ticker, stock_price, beta, risk_category))
+        except Exception as e:
+            print(f"Error fetching data for {ticker}: {e}")
+    
+    store_in_db(stocks)
+    print("Data successfully stored in database!")
+
+def classify_risk(beta):
+    if beta < 1.0:
+        return "Low Risk"
+    elif beta == 1.0:
+        return "Moderate Risk"
+    elif beta > 1.0:
+        return "High Risk"
+
+def store_in_db(stocks):
+    conn = sqlite3.connect("betavalues.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS stock_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            stock_ticker TEXT,
+            stock_price REAL,
+            beta_value REAL,
+            risk_category TEXT
+        )
+    """)
+    cursor.executemany("INSERT INTO stock_data (stock_ticker, stock_price, beta_value, risk_category) VALUES (?, ?, ?, ?)", stocks)
+    conn.commit()
+    conn.close()
+
+if __name__ == "__main__":
+    fetch_beta_values()

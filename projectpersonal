@@ -41,4 +41,3 @@ if __name__ == "__main__":
     fetch_beta_values(tickers)
 
 
-
