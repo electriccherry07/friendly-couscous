@@ -1,0 +1,24 @@
+<button class="btn btn-dark open-button rounded-circle" onclick="openForm()">Chat</button>
+        <div class="chat-popup" id="myForm">
+            <div class="heading text-center" style="background-color: #eaeaea;">
+                <p>
+                    <strong>
+                        Welcome! It's David!
+                    </strong>
+                </p>
+                <p>
+                    I'm here to answer your queries and provide support!
+                </p>
+                <button class="btn btn-outline-dark mb-3" id="clear-btn">Clear History!</button>
+            </div>
+            <form class="form-container">
+                <section id="chatbox" class="container mb-2 py-1">
+                </section>
+                <input type="text" name="message" placeholder="Type your message here..." required></input>
+                <div class="button-group text-center">
+                    <button class="btn btn-outline-dark my-2" type="submit" id="send-btn">Send me something!</button>
+                    <button type="button" class="btn btn-outline-danger cancel my-2"
+                        onclick="closeForm()">Close</button>
+                </div>
+            </form>
+        </div>
