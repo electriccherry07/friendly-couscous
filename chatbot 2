@@ -1,0 +1,80 @@
+<script>
+        function openForm() {
+            document.getElementById("myForm").style.display = "block";
+        }
+
+        function closeForm() {
+            document.getElementById("myForm").style.display = "none";
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("myForm");
+            if (form) {
+                form.addEventListener("submit", function (event) {
+                    event.preventDefault();
+                    const messageInput = document.querySelector(
+                        'input[name="message"]'
+                    );
+                    const message = messageInput.value.trim();
+                    const chatbox = document.getElementById("chatbox");
+
+                    // Append the user's message to the chat container
+                    if (message) {
+                        const roleDiv = document.createElement("span");
+                        roleDiv.className = "float-right badge badge-success w-25";
+                        roleDiv.classList.add("message-role");
+                        roleDiv.classList.add("user");
+
+                        roleDiv.textContent = "User";
+                        const con = document.createElement("div")
+                        con.className = "container";
+                        con.appendChild(roleDiv);
+                        chatbox.appendChild(con);
+                        chatbox.appendChild(document.createElement("br"));
+
+                        const userMessageDiv = document.createElement("article");
+                        userMessageDiv.className = "float-right mb-3";
+                        userMessageDiv.classList.add("user-message");
+                        userMessageDiv.textContent = message;
+                        chatbox.appendChild(userMessageDiv);
+                        chatbox.appendChild(document.createElement("br"));
+                        chatbox.appendChild(document.createElement("br"));
+                    }
+
+                    // Clear the message input
+                    messageInput.value = "";
+
+                    // Send the user's message to the server using AJAX
+                    fetch("/chat", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ message: message }),
+                    })
+                        .then((response) => response.text()).then((text) => {
+                            if (text) {
+                                const roleDiv = document.createElement("span");
+                                roleDiv.className = "float-left badge badge-secondary w-25";
+                                roleDiv.classList.add("message-role");
+                                roleDiv.classList.add("david");
+
+                                roleDiv.textContent = "David";
+                                chatbox.appendChild(roleDiv);
+                                chatbox.appendChild(document.createElement("br"));
+
+                                // Prepare the assistant's message container
+                                const davidMessageDiv = document.createElement("article");
+                                davidMessageDiv.className = "float-left mb-3";
+                                davidMessageDiv.classList.add("david-message");
+                                davidMessageDiv.textContent = text;
+                                chatbox.appendChild(davidMessageDiv);
+                                chatbox.appendChild(document.createElement("br"));
+                            }
+                        }).catch((error) => {
+                            console.error('Error sending message:', error);
+                        });
+                });
+            } else {
+                console.error("Form element not found");
+            }
