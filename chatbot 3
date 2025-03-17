@@ -1,0 +1,25 @@
+            document
+                .getElementById("clear-btn")
+                .addEventListener("click", function () {
+                    // Clear the chat container
+                    const chatbox = document.getElementById("chatbox");
+                    chatbox.innerHTML = "";
+
+                    // Re-insert the initial system message as an assistant message
+                    const systemMessageDiv = document.createElement("article");
+                    systemMessageDiv.classList.add("david-message"); // Use the assistant message class
+                    systemMessageDiv.textContent = "Hello, how may I help you today?";
+                    chatbox.appendChild(systemMessageDiv);
+                    chatbox.appendChild(document.createElement("br"));
+
+                    // Reset the chat history on the server
+                    fetch("/reset", {
+                        method: "POST",
+                    }).then((response) => {
+                        if (response.ok) {
+                            console.log("Chat history has been reset.");
+                        }
+                    });
+                });
+        })
+    </script>
