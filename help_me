@@ -1,0 +1,59 @@
+import yfinance as yf
+import sqlite3
+
+def fetch_beta_values():
+    stocks = []
+    
+    # Get all tickers from Yahoo Finance for the S&P 500
+    import pandas as pd
+    url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+    sp500_tickers = pd.read_html(url)[0]['Symbol'].tolist()
+    tickers = [ticker for ticker in sp500_tickers if isinstance(ticker, str)]  # SPY is an ETF tracking S&P 500
+    
+    try:
+        stock_data = yf.download(tickers, period='1d')
+    except Exception as e:
+        print(f"Error downloading data from Yahoo Finance: {e}")
+        return
+    
+    for ticker in tickers:
+            if ticker in stock_data.columns.levels[1]:
+                stock_price = stock_data['Close'][ticker].dropna().values[-1] if not stock_data['Close'][ticker].dropna().empty else None
+                stock = yf.Ticker(ticker)
+                beta = stock.info.get("beta", None)
+            
+            if beta is not None and stock_price is not None:
+                risk_category = classify_risk(beta)
+                stocks.append((ticker, stock_price, beta, risk_category))
+    if beta is None or stock_price is None:
+            print(f"Skipping {ticker} due to missing data")
+    
+    store_in_db(stocks)
+    print("Data successfully stored in database!")
+
+def classify_risk(beta):
+    if beta < 1.0:
+        return "Low Risk"
+    elif beta == 1.0:
+        return "Moderate Risk"
+    elif beta > 1.0:
+        return "High Risk"
+
+def store_in_db(stocks):
+    conn = sqlite3.connect("betavalue.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS stock_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            stock_ticker TEXT,
+            stock_price REAL,
+            beta_value REAL,
+            risk_category TEXT
+        )
+    """)
+    cursor.executemany("INSERT INTO stock_data (stock_ticker, stock_price, beta_value, risk_category) VALUES (?, ?, ?, ?)", stocks)
+    conn.commit()
+    conn.close()
+
+if __name__ == "__main__":
+    fetch_beta_values()
